@@ -8,6 +8,7 @@ const { User } = require('./models/user');
 
 
 const app = express();
+const PORT = process.env.PORT || 3000;
 
 // If there is a JSON object in the body of the request, it gets
 // parsed into a JS Object and attached to req -> req.body
@@ -53,7 +54,7 @@ app.get('/todos/:id', (req, res) => {
         .catch(err => res.status(400).send());
 });
 
-app.listen(3000, () => console.log(`Started on PORT 3000`));
+app.listen(PORT, () => console.log(`Started on PORT ${PORT}`));
 
 
 module.exports = app;
