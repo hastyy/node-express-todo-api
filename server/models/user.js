@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const validator = require('validator');
 const jwt = require('jsonwebtoken');
 const _ = require('lodash');
+const bcrypt = require('bcryptjs');
 
 
 const UserSchema = new mongoose.Schema({
@@ -95,6 +96,33 @@ UserSchema.statics.findByToken = function(token) {
         'tokens.access': 'auth'
     });
 };
+
+// This function registers middleware to run right before a .save() operation
+// to the users collection.
+UserSchema.pre('save', function(next) {
+    const user = this;
+
+    /**
+     * This code runs for every save operation, being it the first time we're
+     * saving the user to the database or any time we are updating the user.
+     * We can use .isModified(<field>) to know if the given field was altered
+     * before issuing this .save() operation (this code only runs when .save is
+     * invoked, and it runs right before it - 'pre' middleware).
+     * 
+     * If the password is being modified (it runs when we first register the user)
+     * then we are running this callback logic.
+     * Else, we stop the execution of the middleware here because otherwise we would
+     * be re-hashing an already hashed password.
+     */
+    if (!user.isModified('password')) next();
+
+    bcrypt.genSalt(10, (err, salt) => {
+        bcrypt.hash(user.password, salt, (err, hash) => {
+            user.password = hash;
+            next();
+        });
+    });
+});
 
 const User = mongoose.model('User', UserSchema);
 
