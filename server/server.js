@@ -99,6 +99,24 @@ app.patch('/todos/:id', (req, res) => {
         });
 });
 
+app.post('/users', (req, res) => {
+    const body = _.pick(req.body, ['email', 'password']);
+    const user = new User(body);
+
+    user.save()
+        .then(() => {
+            //res.status(201).send(user);
+            return user.generateAuthToken();    // user is the one instantiated above
+        })
+        .then((token) => {
+            res.header('X-Auth', token).status(201).send(user);
+        })
+        .catch((err) => {
+            // We'll get here if the user instance does not validate
+            res.status(400).send(err);
+        });
+});
+
 app.listen(PORT, () => console.log(`Started on PORT ${PORT}`));
 
 
