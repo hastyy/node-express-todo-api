@@ -122,6 +122,26 @@ app.get('/users/me', authenticate, (req, res) => {
     res.send(req.user);
 });
 
+app.post('/users/login', (req, res) => {
+    const body = _.pick(req.body, ['email', 'password']);
+
+    User.findByCredentials(body.email, body.password)
+        .then((user) => {
+            // We have to attach the .then() here because if we chain
+            // it below we will be out of the scope of 'user' and won't
+            // be able to .send(user)
+            // We return the promise so that if something fails, the
+            // .catch() call chained below will catch the error.
+            return user.generateAuthToken()
+                .then((token) => {
+                    res.header('X-Auth', token).send(user);
+                });
+        })
+        .catch((err) => {
+            res.status(400).send();
+        });
+});
+
 app.listen(PORT, () => console.log(`Started on PORT ${PORT}`));
 
 
