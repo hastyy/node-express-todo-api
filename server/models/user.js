@@ -58,6 +58,10 @@ UserSchema.methods.generateAuthToken = function() {
 
 /**
  * Override of the toJSON method already made available by Mongoose.
+ * We override this method so that when we send the user object in
+ * res.send(user) , what gets send is the returned value of our
+ * implementation (which will be a cut version of the whole user
+ * document).
  * 
  * @Override
  */
@@ -66,6 +70,30 @@ UserSchema.methods.toJSON = function() {
     const userObject = user.toObject();
 
     return _.pick(userObject, ['_id', 'email']);
+};
+
+// UserSchema.statics -> Model methods
+// Like the static methods of a class, User (model) being the class.
+//
+// Using the old function syntax instead of arrow functions
+// because this binds the 'this' keyword, which will point
+// to the User model.
+UserSchema.statics.findByToken = function(token) {
+    const User = this;
+    let decoded;
+
+    try {
+        decoded = jwt.verify(token, 'abc123');
+    } catch (e) {
+        // If we can't decode the token, return a Promise that will always reject
+        return Promise.reject(e);
+    }
+
+    return User.findOne({
+        _id: decoded._id,
+        'tokens.token': token,
+        'tokens.access': 'auth'
+    });
 };
 
 const User = mongoose.model('User', UserSchema);
