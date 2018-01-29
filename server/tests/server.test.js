@@ -258,3 +258,56 @@ describe('POST /users', () => {
     });
 
 });
+
+describe('POST /users/login', () => {
+
+    it('should login user and return auth token', (done) => {
+        const { _id, email, password } = users[0];
+
+        request(app)
+            .post('/users/login')
+            .send({ email, password })
+            .expect(200)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toExist();
+            })
+            .end((err, res) => {
+                if (err) return done(err);
+
+                User.findById(_id)
+                    .then((user) => {
+                        expect(user.tokens[1]).toInclude({  // tokens[1] because it already had a token
+                            access: 'auth',
+                            token: res.headers['x-auth']
+                        });
+
+                        done();
+                    })
+                    .catch((err) => done(err));
+            });
+    });
+
+    it('should reject invalid login', (done) => {
+        const { _id, email, password } = users[1];  // this user has no tokens
+
+        request(app)
+            .post('/users/login')
+            .send({ email, password: password+'1' })
+            .expect(400)
+            .expect((res) => {
+                expect(res.headers['x-auth']).toNotExist();
+            })
+            .end((err, res) => {
+                if (err) return done(err);
+
+                User.findById(_id)
+                    .then((user) => {
+                        expect(user.tokens.length).toBe(0);
+
+                        done();
+                    })
+                    .catch((err) => done(err));
+            });
+    });
+
+});
