@@ -73,6 +73,19 @@ UserSchema.methods.toJSON = function() {
     return _.pick(userObject, ['_id', 'email']);
 };
 
+// Remove the specified token
+UserSchema.methods.removeToken = function(token) {
+    const user = this;
+
+    return user.update({
+        $pull: {
+            tokens: {
+                token: token
+            }
+        }
+    });
+};
+
 // UserSchema.statics -> Model methods
 // Like the static methods of a class, User (model) being the class.
 //
