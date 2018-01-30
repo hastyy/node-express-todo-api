@@ -5,7 +5,7 @@ const { Todo } = require('./../../models/todo');
 const { User } = require('./../../models/user');
 
 
-const secret = 'abc123';
+const secret = process.env.JWT_SECRET;
 const access = 'auth';
 const userOneId = new ObjectID();
 const userTwoId = new ObjectID();
